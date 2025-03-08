@@ -3,7 +3,7 @@
 GeneFlow 是一个基于 Azure 云服务的基因序列分析平台，允许用户上传 FASTQ 格式的测序数据，使用 BWA 与参考基因组进行比对，并通过邮件接收分析结果。该解决方案充分利用了 Azure 的多种服务，包括静态网站托管、Azure Functions、Blob Storage、Azure Batch 和 Communication Services，构建了一个完整的无服务器工作流。
 
 ## 系统架构
-1. 前端界面 ：静态网页，用于用户上传测序数据
+1. 前端界面 ：Azure Static Web App托管静态网页，用于用户上传测序数据
 2. 数据存储 ：Azure Blob Storage 存储原始数据、参考基因组和分析结果
 3. 计算处理 ：Azure Batch 执行大规模并行计算任务
 4. 任务协调 ：Azure Functions 处理上传、触发分析和发送结果
@@ -15,7 +15,7 @@ GeneFlow 是一个基于 Azure 云服务的基因序列分析平台，允许用�
 - 分析完成后通过邮件发送结果下载链接
 - 错误监控和通知机制 Azure 基因序列分析平台部署详细指南
 
-以下是通过 Azure Portal 部署基因序列分析平台的详细步骤指南。
+## 以下是通过 Azure Portal 部署基因序列分析平台的详细步骤指南。
 
 ## 1. 创建资源组
 
@@ -173,34 +173,44 @@ GeneFlow 是一个基于 Azure 云服务的基因序列分析平台，允许用�
 3. 在 Azure 扩展中，登录您的 Azure 账户
 4. 在 FUNCTIONS 部分，找到您的订阅和 `geneanalysisapp` Function App
 5. 右键点击 `geneanalysisapp`，选择"从工作区部署..."
-6. 选择包含 Function 代码的文件夹（例如 `c:\Users\wba\Desktop\GeneFlow\geneanalysisapp`）
+6. 选择包含 Function 代码的文件夹（例如 `geneanalysisapp`）
 7. 确认部署
 8. 等待部署完成，VS Code 会显示部署状态通知
 
-## 6. 创建静态网页
+## 6. 创建 Azure Static Web App
 
-### 6.1 启用存储账户的静态网站功能
+1. 在 Azure Portal 中，点击"创建资源"
+2. 搜索并选择"Static Web App"
+3. 点击"创建"
+4. 填写以下信息：
+   - 订阅：选择您的 Azure 订阅
+   - 资源组：选择 `GeneFlowResourceGroup`
+   - 名称：输入 `geneflow-web`
+   - 托管计划：选择"免费"
+   - 区域：选择与资源组相同的区域
+   - 源：选择"其他"（我们将手动部署）
+5. 点击"查看 + 创建"，然后点击"创建"
+6. 部署完成后，点击"前往资源"
 
-1. 返回到 `geneflowstorage` 存储账户页面
-2. 点击左侧菜单的"静态网站"（在"数据管理"部分）
-3. 将"静态网站"设置为"已启用"
-4. 索引文档名称：输入 `index.html`
-5. 错误文档路径：输入 `index.html`
-6. 点击"保存"
-7. 记下"主终结点"URL，这将是您的网站地址
+### 6.1 获取部署令牌
+
+1. 在 Static Web App 页面，点击左侧菜单的"概述"
+2. 点击"管理部署令牌"
+3. 复制部署令牌，保存到安全的地方
 
 ### 6.2 更新前端配置
 
-1. 打开 `c:\Users\wba\Desktop\GeneFlow\gene-analysis-web\script.js` 文件
+1. 打开 `gene-analysis-web\script.js` 文件
 2. 将第 2 行的 `FUNCTION_APP_URL` 更新为您的 Function App URL（格式为 `https://geneanalysisapp.azurewebsites.net`）
 3. 保存文件
 
-### 6.3 上传前端文件
+### 6.3 部署前端文件
 
-1. 在存储账户的"静态网站"页面，点击"$web"容器
-2. 点击"上传"
-3. 上传 `gene-analysis-web` 目录中的所有文件（`index.html`、`script.js` 和 `styles.css`）
-4. 点击"上传"
+使用 Static Web App CLI 部署静态网站：
+
+1. 确保已安装 [Static Web App CLI]`npm install -g @azure/static-web-apps-cli`
+2. 使用令牌部署 `swa deploy ./gene-analysis-web --deployment-token <deployment-token>`
+
 
 ## 7. 配置事件订阅
 
