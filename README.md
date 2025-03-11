@@ -16,7 +16,7 @@ GeneFlow 是一个基于 Azure 云服务的基因序列分析平台，允许用�
 - 错误监控和通知机制 Azure 基因序列分析平台部署详细指南
 ## 系统架构图
 
-![GeneFlow 系统架构图](./images/GeneFlow-架构图.drawio.png)
+![GeneFlow 系统架构图](./docs/images/GeneFlow-架构图.drawio.png)
 ### 架构图说明
 
 GeneFlow 系统架构基于 Azure 云服务构建，整个工作流程如下：
@@ -34,7 +34,7 @@ GeneFlow 系统架构基于 Azure 云服务构建，整个工作流程如下：
 
 ## 系统工作流程图
 
-![GeneFlow 工作流程图](./images/GeneFlow-工作流程图.drawio.png)
+![GeneFlow 工作流程图](./docs/images/GeneFlow-工作流程图.drawio.png)
 
 ## 以下是通过 Azure Portal 部署基因序列分析平台的详细步骤指南。
 
