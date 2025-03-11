@@ -3,7 +3,6 @@
 # Manually managing azure-functions-worker may cause unexpected issues
 
 azure-functions
-azure-functions
 azure-storage-blob>=12.19.1
 azure-batch>=11.0.0
 azure-communication-email>=1.0.0

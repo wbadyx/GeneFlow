@@ -14,6 +14,27 @@ GeneFlow 是一个基于 Azure 云服务的基因序列分析平台，允许用�
 - 完整的任务日志记录，包括起始时间、结束时间和运行时长
 - 分析完成后通过邮件发送结果下载链接
 - 错误监控和通知机制 Azure 基因序列分析平台部署详细指南
+## 系统架构图
+
+![GeneFlow 系统架构图](./images/GeneFlow-架构图.drawio.png)
+### 架构图说明
+
+GeneFlow 系统架构基于 Azure 云服务构建，整个工作流程如下：
+
+1. **用户交互与上传**：用户通过 Azure Static Web App 托管的网页界面上传 FASTQ 格式的基因序列数据
+2. **文件上传处理**：Web应用触发 HTTP 请求，调用 upload_function 函数处理上传并将数据存储到 rawsequences 容器
+3. **事件触发分析**：上传完成后，Event Grid 监听 rawsequences 存储事件，并触发 Azure Function 进行数据分析任务
+4. **批量计算处理**：trigger_analysis 函数创建 Azure Batch 任务，Azure Batch 使用 BWA 工具执行基因序列比对分析
+5. **数据加载**：计算节点从存储账户加载两类数据：参考基因组数据 (从 refs 容器)和测序数据 (从 rawsequences 容器)
+6. **结果输出**：分析完成后，计算节点将结果输出到 results 容器
+7. **结果处理**：Event Grid 捕获结果文件创建事件，process_results 函数被触发，处理分析结果并生成带有 SAS 令牌的下载链接
+8. **用户通知**：处理完成后，Azure Function 通过 Azure Communication Services 发送电子邮件通知用户分析结果已生成，并提供结果文件的下载链接
+
+这种基于事件驱动的微服务架构具有高可扩展性、高可用性和低维护成本，能够高效处理基因测序数据分析任务，为用户提供便捷的使用体验。所有组件都归属于同一个 Resource Group，便于统一管理和监控。
+
+## 系统工作流程图
+
+![GeneFlow 工作流程图](./images/GeneFlow-工作流程图.drawio.png)
 
 ## 以下是通过 Azure Portal 部署基因序列分析平台的详细步骤指南。
 
@@ -164,18 +185,61 @@ GeneFlow 是一个基于 Azure 云服务的基因序列分析平台，允许用�
    - 名称：`ADMIN_EMAIL`，值：您的管理员电子邮件地址
 4. 点击"保存"
 
-### 5.2 部署 Function 代码
+### 5.2 使用 VS Code 开发 Function 代码
 
-使用 Visual Studio Code 部署 Function 代码：
+#### 5.2.1 准备开发环境
 
-1. 确保已安装 [Visual Studio Code](https://code.visualstudio.com/) 和 [Azure Functions 扩展](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions)
-2. 打开 VS Code，点击左侧的 Azure 图标
-3. 在 Azure 扩展中，登录您的 Azure 账户
-4. 在 FUNCTIONS 部分，找到您的订阅和 `geneanalysisapp` Function App
-5. 右键点击 `geneanalysisapp`，选择"从工作区部署..."
-6. 选择包含 Function 代码的文件夹（例如 `geneanalysisapp`）
-7. 确认部署
-8. 等待部署完成，VS Code 会显示部署状态通知
+1. 确保已安装以下软件：
+   - [Visual Studio Code](https://code.visualstudio.com/)
+   - [Python 3.11](https://www.python.org/downloads/)
+   - [Azure Functions Core Tools](https://github.com/Azure/azure-functions-core-tools)
+   - [Azure CLI](https://docs.microsoft.com/zh-cn/cli/azure/install-azure-cli)
+
+2. 在 VS Code 中安装以下扩展：
+   - [Azure Functions](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions)
+   - [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+   - [Azure Account](https://marketplace.visualstudio.com/items?itemName=ms-vscode.azure-account)
+
+#### 5.2.2 创建本地 Function 项目
+
+1. 打开 VS Code
+2. 按 `Ctrl+Shift+P` 打开命令面板
+3. 输入并选择 `Azure Functions: Create New Project...`
+4. 选择项目文件夹（例如 `GeneFlow\geneanalysisapp`）
+5. 选择语言 `Python`
+6. 选择 Python 版本 `3.11`
+7. 选择 `Model V2` 模式（这是最新的 Python Functions 编程模型）
+8. 选择 `Skip for now` 暂时跳过创建函数
+
+#### 5.2.3 步骤 3：添加第一个函数 - 文件上传处理
+
+1. 在 Azure Functions 扩展中点击"创建函数"
+2. 选择"HTTP触发器"
+3. 函数名称：输入 `upload_function`
+4. 授权级别：选择 `Anonymous`
+5. 创建完成后，VS Code 会生成 `function_app.py` 文件
+
+#### 5.2.4 步骤 4：添加第二个函数 - 分析任务触发器
+
+1. 在 Azure Functions 扩展中点击"创建函数"
+2. 选择"EventGridEvent"
+3. 函数名称：输入 `trigger_analysis`
+4. 创建完成后，VS Code 会更新 `function_app.py` 文件
+
+#### 5.2.5 步骤 5：添加第三个函数 - 结果处理和邮件通知
+
+1. 在 Azure Functions 扩展中点击"创建函数"
+2. 选择"EventGridEvent"
+3. 函数名称：输入 `process_results`
+4. 创建完成后，VS Code 会更新 `function_app.py` 文件
+
+#### 5.2.6 编写函数代码
+
+完成上述步骤后，您需要编辑 `function_app.py` 文件，实现以下功能：
+
+1. `upload_function`: 处理用户通过前端上传的 FASTQ 文件，将文件保存到 Blob Storage
+2. `trigger_analysis`: 当新的 FASTQ 文件上传到 `rawsequences` 容器时触发，创建 Azure Batch 任务执行基因分析
+3. `process_results`: 当分析结果保存到 `results` 容器时触发，生成下载链接并发送邮件通知
 
 ## 6. 创建 Azure Static Web App
 
@@ -261,3 +325,4 @@ GeneFlow 是一个基于 Azure 云服务的基因序列分析平台，允许用�
 4. **应用程序设置**：确保所有必要的环境变量都已正确设置
 
 完成以上步骤后，您的基因序列分析平台应该已经成功部署并可以使用了。用户可以通过静态网站上传测序数据，系统会自动处理并通过邮件发送结果。
+
