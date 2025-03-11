@@ -21,16 +21,14 @@ GeneFlow 是一个基于 Azure 云服务的基因序列分析平台，允许用�
 
 GeneFlow 系统架构基于 Azure 云服务构建，整个工作流程如下：
 
-1. **用户交互与上传**：用户通过 Azure Static Web App 托管的网页界面上传 FASTQ 格式的基因序列数据
+1. **用户上传文件**：用户通过 Azure Static Web App 托管的网页界面上传 FASTQ 格式的基因序列数据
 2. **文件上传处理**：Web应用触发 HTTP 请求，调用 upload_function 函数处理上传并将数据存储到 rawsequences 容器
 3. **事件触发分析**：上传完成后，Event Grid 监听 rawsequences 存储事件，并触发 Azure Function 进行数据分析任务
 4. **批量计算处理**：trigger_analysis 函数创建 Azure Batch 任务，Azure Batch 使用 BWA 工具执行基因序列比对分析
-5. **数据加载**：计算节点从存储账户加载两类数据：参考基因组数据 (从 refs 容器)和测序数据 (从 rawsequences 容器)
+5. **数据加载**：计算节点从存储账户加载参考基因组数据 (从 refs 容器)和测序数据 (从 rawsequences 容器)
 6. **结果输出**：分析完成后，计算节点将结果输出到 results 容器
-7. **结果处理**：Event Grid 捕获结果文件创建事件，process_results 函数被触发，处理分析结果并生成带有 SAS 令牌的下载链接
+7. **结果处理**：Event Grid 捕获结果文件创建事件，触发process_results 函数处理分析结果并生成带有 SAS 令牌的下载链接
 8. **用户通知**：处理完成后，Azure Function 通过 Azure Communication Services 发送电子邮件通知用户分析结果已生成，并提供结果文件的下载链接
-
-这种基于事件驱动的微服务架构具有高可扩展性、高可用性和低维护成本，能够高效处理基因测序数据分析任务，为用户提供便捷的使用体验。所有组件都归属于同一个 Resource Group，便于统一管理和监控。
 
 ## 系统工作流程图
 
