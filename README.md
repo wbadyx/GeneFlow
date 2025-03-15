@@ -183,7 +183,7 @@ GeneFlow 系统架构基于 Azure 云服务构建，整个工作流程如下：
    - 名称：`ADMIN_EMAIL`，值：您的管理员电子邮件地址
 4. 点击"保存"
 
-### 5.1.1 配置 Function App CORS
+#### 5.1.1 配置 Function App CORS
 
 为了确保静态网站能够正常调用 Function App API，需要配置 CORS（跨源资源共享）设置：
 
