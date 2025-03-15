@@ -183,6 +183,16 @@ GeneFlow 系统架构基于 Azure 云服务构建，整个工作流程如下：
    - 名称：`ADMIN_EMAIL`，值：您的管理员电子邮件地址
 4. 点击"保存"
 
+### 5.1.1 配置 Function App CORS
+
+为了确保静态网站能够正常调用 Function App API，需要配置 CORS（跨源资源共享）设置：
+
+1. 在 Function App 页面，点击左侧菜单的"CORS"（在"API"部分）
+2. 在"允许的源"部分，添加您的 Static Web App 域名（例如 `https://proud-tree-example.azurestaticapps.net`）
+   - Static Web App域名可以在后续创建 Static Web App 的"概述"页面找到此域名
+3. 勾选"启用访问凭据"选项
+4. 点击"保存"
+
 ### 5.2 使用 VS Code 开发 Function 代码
 
 #### 5.2.1 准备开发环境
@@ -323,4 +333,5 @@ GeneFlow 系统架构基于 Azure 云服务构建，整个工作流程如下：
 4. **应用程序设置**：确保所有必要的环境变量都已正确设置
 
 完成以上步骤后，您的基因序列分析平台应该已经成功部署并可以使用了。用户可以通过静态网站上传测序数据，系统会自动处理并通过邮件发送结果。
+
 
